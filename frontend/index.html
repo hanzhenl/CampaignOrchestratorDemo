@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-native Campaign Orchestrator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Enable dark mode in Tailwind
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+      // Force dark mode
+      document.documentElement.classList.add('dark');
+    </script>
+</head>
+<body class="dark bg-gray-900">
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
