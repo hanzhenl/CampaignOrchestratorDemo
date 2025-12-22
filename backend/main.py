@@ -11,7 +11,7 @@ from datetime import datetime
 from pydantic import BaseModel
 import uuid
 
-app = FastAPI(title="AI-native Campaign Orchestrator API", version="1.0.0")
+app = FastAPI(title="Campaign Launchpad API", version="1.0.0")
 
 # CORS middleware for frontend
 app.add_middleware(
@@ -45,16 +45,19 @@ class DialogSession(BaseModel):
 class CampaignCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    goal: str
-    segmentId: Optional[str] = None
+    goals: Optional[List[str]] = []  # Changed to array
+    segmentIds: Optional[List[str]] = []  # Changed to array for multiple segments
     estimatedAudienceSize: Optional[int] = None
     schedule: Optional[Dict] = None
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+    progress: Optional[float] = None
     userFlowConfig: Optional[Dict] = None
     channels: List[str] = []
     variants: Optional[List[Dict]] = None
     sessionId: Optional[str] = None
 
-class CompendiumArticle(BaseModel):
+class KnowledgeArticle(BaseModel):
     title: str
     content: str
     articleType: Optional[str] = "general"
@@ -77,137 +80,26 @@ def save_json(filepath: str, data: Any):
     with open(filepath, 'w') as f:
         json.dump(data, f, indent=2)
 
-# Agent Orchestration Engine
-class AgentOrchestrator:
-    def __init__(self):
-        self.agents = {
-            "campaign_generation": CampaignGenerationAgent(),
-            "campaign_analysis": CampaignAnalysisAgent(),
-        }
-    
-    def route_intent(self, prompt: str) -> str:
-        """Classify user intent and route to appropriate agent"""
-        prompt_lower = prompt.lower()
-        if any(word in prompt_lower for word in ["create", "generate", "new campaign", "campaign"]):
-            return "campaign_generation"
-        elif any(word in prompt_lower for word in ["analyze", "review", "performance"]):
-            return "campaign_analysis"
-        return "campaign_generation"  # default
-    
-    def process(self, prompt: str, context: Optional[Dict] = None) -> Dict:
-        intent = self.route_intent(prompt)
-        agent = self.agents[intent]
-        return agent.process(prompt, context)
+# Import new orchestration system
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
 
-class CampaignGenerationAgent:
-    def process(self, prompt: str, context: Optional[Dict] = None) -> Dict:
-        """Generate campaign configuration based on prompt"""
-        # Load historical data for analysis
-        campaigns = load_json(f"{DATA_DIR}/campaigns.json")
-        segments = load_json(f"{DATA_DIR}/segments.json")
-        
-        # Simulate AI analysis
-        reasoning_steps = [
-            {"step": "Intent Classification", "result": "Campaign creation request identified"},
-            {"step": "Historical Analysis", "result": f"Analyzed {len(campaigns)} historical campaigns"},
-            {"step": "Audience Research", "result": f"Evaluated {len(segments)} available segments"},
-            {"step": "Optimal Configuration", "result": "Generated campaign configuration based on best practices"}
-        ]
-        
-        # Generate campaign configuration
-        campaign_config = {
-            "name": self._extract_campaign_name(prompt),
-            "description": "AI-generated campaign based on your requirements",
-            "goal": self._infer_goal(prompt),
-            "channels": self._infer_channels(prompt),
-            "estimatedAudienceSize": 10000,
-            "schedule": {"type": "immediate"},
-            "userFlowConfig": {
-                "flowType": "sequential",
-                "steps": self._generate_user_flow(prompt)
-            },
-            "variants": [
-                {"name": "Variant A", "splitPercentage": 50.0, "content": {}},
-                {"name": "Variant B", "splitPercentage": 50.0, "content": {}}
-            ]
-        }
-        
-        proposal = f"""
-Based on your request: "{prompt}"
+from orchestration.orchestrator import AgentOrchestrator
+import logging
 
-I've analyzed historical campaign data and audience segments to recommend the following optimal configuration:
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-**Campaign Strategy:**
-- Goal: {campaign_config['goal']}
-- Channels: {', '.join(campaign_config['channels'])}
-- Estimated Reach: {campaign_config['estimatedAudienceSize']:,} users
-- Flow Type: {campaign_config['userFlowConfig']['flowType']}
-
-**Why this configuration:**
-- Historical campaigns with similar goals showed 15-20% higher conversion with multi-channel approach
-- Sequential flow allows for progressive engagement
-- A/B testing with 50/50 split provides statistical significance
-
-You can review and edit the configuration in the Experience Panel.
-        """.strip()
-        
-        return {
-            "agent": "CampaignGenerationAgent",
-            "reasoningSteps": reasoning_steps,
-            "proposal": proposal,
-            "campaignConfig": campaign_config,
-            "experiencePanelType": "campaign_form"
-        }
-    
-    def _extract_campaign_name(self, prompt: str) -> str:
-        # Simple extraction - in production would use NLP
-        if "campaign" in prompt.lower():
-            return prompt[:50] + " Campaign"
-        return "New Campaign"
-    
-    def _infer_goal(self, prompt: str) -> str:
-        prompt_lower = prompt.lower()
-        if "purchase" in prompt_lower or "buy" in prompt_lower:
-            return "purchase"
-        elif "session" in prompt_lower or "visit" in prompt_lower:
-            return "start_session"
-        elif "open" in prompt_lower:
-            return "open_message"
-        return "custom_event"
-    
-    def _infer_channels(self, prompt: str) -> List[str]:
-        channels = []
-        prompt_lower = prompt.lower()
-        if "email" in prompt_lower:
-            channels.append("email")
-        if "sms" in prompt_lower or "text" in prompt_lower:
-            channels.append("sms")
-        if "push" in prompt_lower or "notification" in prompt_lower:
-            channels.append("push")
-        return channels if channels else ["email", "sms"]  # default
-    
-    def _generate_user_flow(self, prompt: str) -> List[Dict]:
-        return [
-            {"stepType": "email", "channel": "email", "order": 1},
-            {"stepType": "sms", "channel": "sms", "order": 2, "condition": "if_email_opened"}
-        ]
-
-class CampaignAnalysisAgent:
-    def process(self, prompt: str, context: Optional[Dict] = None) -> Dict:
-        return {
-            "agent": "CampaignAnalysisAgent",
-            "reasoningSteps": [{"step": "Analysis", "result": "Campaign performance analyzed"}],
-            "proposal": "Analysis results would be displayed here",
-            "experiencePanelType": "analysis_view"
-        }
-
+# Initialize new orchestration system
 orchestrator = AgentOrchestrator()
 
 # API Endpoints
 
 @app.get("/")
 async def root():
-    return {"message": "AI-native Campaign Orchestrator API", "version": "1.0.0"}
+    return {"message": "Campaign Launchpad API", "version": "1.0.0"}
 
 # Agent Orchestration
 @app.post("/api/v1/agent/orchestrate")
@@ -216,33 +108,77 @@ async def orchestrate_agent(request: Dict[str, Any]):
     context = request.get("context", {})
     session_id = request.get("sessionId")
     
-    result = orchestrator.process(prompt, context)
+    try:
+        # Use new orchestration system
+        result = orchestrator.orchestrate(prompt, context, session_id)
+        
+        # Store in dialog session if sessionId provided
+        if session_id:
+            sessions = load_json(f"{DATA_DIR}/dialog_sessions.json")
+            session = next((s for s in sessions if s["id"] == session_id), None)
+            if session:
+                # Add user message
+                message = {
+                    "id": str(uuid.uuid4()),
+                    "role": "user",
+                    "content": prompt,
+                    "timestamp": datetime.now().isoformat()
+                }
+                session["messages"].append(message)
+                
+                # Add assistant message
+                proposal = result.get("campaignConfig", {}).get("name", "Response generated")
+                if isinstance(result.get("campaignConfig"), dict):
+                    proposal = f"Generated campaign: {result.get('campaignConfig', {}).get('name', 'Campaign')}"
+                elif isinstance(result.get("campaignConfig"), list):
+                    proposal = f"Found {len(result.get('campaignConfig', []))} results"
+                else:
+                    proposal = "Analysis completed"
+                
+                assistant_message = {
+                    "id": str(uuid.uuid4()),
+                    "role": "assistant",
+                    "content": proposal,
+                    "reasoningSteps": result.get("reasoningSteps", []),
+                    "timestamp": datetime.now().isoformat()
+                }
+                session["messages"].append(assistant_message)
+                session["updatedAt"] = datetime.now().isoformat()
+                save_json(f"{DATA_DIR}/dialog_sessions.json", sessions)
+        
+        return result
     
-    # Store in dialog session if sessionId provided
-    if session_id:
-        sessions = load_json(f"{DATA_DIR}/dialog_sessions.json")
-        session = next((s for s in sessions if s["id"] == session_id), None)
-        if session:
-            message = {
-                "id": str(uuid.uuid4()),
-                "role": "user",
-                "content": prompt,
-                "timestamp": datetime.now().isoformat()
-            }
-            session["messages"].append(message)
-            
-            assistant_message = {
-                "id": str(uuid.uuid4()),
-                "role": "assistant",
-                "content": result["proposal"],
-                "reasoningSteps": result["reasoningSteps"],
-                "timestamp": datetime.now().isoformat()
-            }
-            session["messages"].append(assistant_message)
-            session["updatedAt"] = datetime.now().isoformat()
-            save_json(f"{DATA_DIR}/dialog_sessions.json", sessions)
-    
-    return result
+    except Exception as e:
+        logger.error(f"Orchestration error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Orchestration failed: {str(e)}")
+
+# Additional agent endpoints for testing
+@app.post("/api/v1/agent/classify")
+async def classify_intent(request: Dict[str, Any]):
+    """Direct classification endpoint for testing"""
+    try:
+        from agents.classification_agent import ClassificationAgent
+        agent = ClassificationAgent()
+        prompt = request.get("prompt", "")
+        result = agent.process(prompt)
+        return result
+    except Exception as e:
+        logger.error(f"Classification error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/agent/research")
+async def research_analysis(request: Dict[str, Any]):
+    """Direct research agent endpoint for testing"""
+    try:
+        from agents.research_agent import ResearchAgent
+        agent = ResearchAgent()
+        prompt = request.get("prompt", "")
+        context = request.get("context", {})
+        result = agent.process(prompt, context)
+        return result
+    except Exception as e:
+        logger.error(f"Research error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Dialog Sessions
 @app.get("/api/v1/dialog/sessions")
@@ -309,13 +245,16 @@ async def create_campaign(campaign: CampaignCreate):
         "sessionId": campaign.sessionId,
         "name": campaign.name,
         "description": campaign.description,
-        "goal": campaign.goal,
+        "goals": campaign.goals or [],
         "status": "draft",
         "schedule": campaign.schedule or {},
+        "startDate": campaign.startDate,
+        "endDate": campaign.endDate,
+        "progress": campaign.progress or 0.0,
         "aiGeneratedConfig": {},
         "userFlowConfig": campaign.userFlowConfig or {},
         "estimatedAudienceSize": campaign.estimatedAudienceSize or 0,
-        "segmentId": campaign.segmentId,
+        "segmentIds": campaign.segmentIds or [],
         "channels": campaign.channels,
         "variants": campaign.variants or [],
         "createdAt": datetime.now().isoformat(),
@@ -381,13 +320,13 @@ async def search(q: str, type: str = "all"):
                     "relevance": 1.0
                 })
     
-    if type in ["all", "compendium"]:
-        compendium = load_json(f"{DATA_DIR}/compendium.json")
-        for article in compendium:
+    if type in ["all", "knowledge"]:
+        knowledge = load_json(f"{DATA_DIR}/knowledge.json")
+        for article in knowledge:
             if q_lower in article.get("title", "").lower():
                 results.append({
                     "id": article["id"],
-                    "type": "compendium",
+                    "type": "knowledge",
                     "title": article["title"],
                     "description": article.get("content", "")[:100],
                     "relevance": 1.0
@@ -418,15 +357,15 @@ async def create_segment(segment: SegmentCreate):
     save_json(f"{DATA_DIR}/segments.json", segments)
     return new_segment
 
-# Compendium
-@app.get("/api/v1/compendium")
-async def list_compendium():
-    compendium = load_json(f"{DATA_DIR}/compendium.json")
-    return compendium
+# Knowledge
+@app.get("/api/v1/knowledge")
+async def list_knowledge():
+    knowledge = load_json(f"{DATA_DIR}/knowledge.json")
+    return knowledge
 
-@app.post("/api/v1/compendium")
-async def create_compendium(article: CompendiumArticle):
-    compendium = load_json(f"{DATA_DIR}/compendium.json")
+@app.post("/api/v1/knowledge")
+async def create_knowledge(article: KnowledgeArticle):
+    knowledge = load_json(f"{DATA_DIR}/knowledge.json")
     new_article = {
         "id": str(uuid.uuid4()),
         "title": article.title,
@@ -436,8 +375,8 @@ async def create_compendium(article: CompendiumArticle):
         "createdAt": datetime.now().isoformat(),
         "updatedAt": datetime.now().isoformat()
     }
-    compendium.append(new_article)
-    save_json(f"{DATA_DIR}/compendium.json", compendium)
+    knowledge.append(new_article)
+    save_json(f"{DATA_DIR}/knowledge.json", knowledge)
     return new_article
 
 if __name__ == "__main__":

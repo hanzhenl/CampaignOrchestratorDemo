@@ -5,8 +5,8 @@
   import CampaignList from './CampaignList.svelte';
   import SegmentDetail from './SegmentDetail.svelte';
   import SegmentList from './SegmentList.svelte';
-  import CompendiumDetail from './CompendiumDetail.svelte';
-  import CompendiumList from './CompendiumList.svelte';
+  import KnowledgeDetail from './KnowledgeDetail.svelte';
+  import KnowledgeList from './KnowledgeList.svelte';
 </script>
 
 <div class="h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col">
@@ -19,16 +19,16 @@
         <CampaignList items={$experiencePanelData.items || []} />
       {:else if $experiencePanelType === 'segment_list'}
         <SegmentList items={$experiencePanelData.items || []} />
-      {:else if $experiencePanelType === 'compendium_list'}
-        <CompendiumList items={$experiencePanelData.items || []} />
+      {:else if $experiencePanelType === 'knowledge_list'}
+        <KnowledgeList items={$experiencePanelData.items || []} />
       {:else if $experiencePanelType === 'campaign_form' || ($experiencePanelData && $experiencePanelData.name && !$experiencePanelType)}
         <CampaignForm data={$experiencePanelData} />
       {:else if $experiencePanelType === 'campaign'}
         <CampaignDetail data={$experiencePanelData} />
       {:else if $experiencePanelType === 'segment'}
         <SegmentDetail data={$experiencePanelData} />
-      {:else if $experiencePanelType === 'compendium'}
-        <CompendiumDetail data={$experiencePanelData} />
+      {:else if $experiencePanelType === 'knowledge'}
+        <KnowledgeDetail data={$experiencePanelData} />
       {:else}
         <div class="text-gray-500 dark:text-gray-400">
           <pre>{JSON.stringify($experiencePanelData, null, 2)}</pre>

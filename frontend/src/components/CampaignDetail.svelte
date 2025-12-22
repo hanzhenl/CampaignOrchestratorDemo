@@ -42,8 +42,10 @@
 
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Goal</div>
-        <div class="text-lg font-semibold text-gray-900 dark:text-white">{campaign.goal}</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">Goals</div>
+        <div class="text-lg font-semibold text-gray-900 dark:text-white">
+          {campaign.goals?.join(', ') || 'N/A'}
+        </div>
       </div>
       <div>
         <div class="text-sm text-gray-500 dark:text-gray-400">Status</div>

@@ -16,7 +16,7 @@ export interface DialogSession {
 
 export interface SearchResult {
   id: string;
-  type: 'campaign' | 'segment' | 'compendium';
+  type: 'campaign' | 'segment' | 'knowledge';
   title: string;
   description: string;
   relevance: number;

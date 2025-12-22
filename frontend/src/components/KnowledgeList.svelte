@@ -4,13 +4,13 @@
   export let items: any[] = [];
 
   function viewArticle(article: any) {
-    experiencePanelData.set({ ...article, type: 'compendium' });
-    experiencePanelType.set('compendium');
+    experiencePanelData.set({ ...article, type: 'knowledge' });
+    experiencePanelType.set('knowledge');
   }
 </script>
 
 <div class="space-y-4">
-  <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Compendium</h2>
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Knowledge</h2>
   <div class="space-y-2">
     {#each items as article}
       <button
