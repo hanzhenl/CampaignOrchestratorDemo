@@ -4,7 +4,7 @@
 
 ### Project Overview
 
-"AI Native Campaign Orchestrator" is a proof-of-concept designed to orchestrate and manage multi-channel marketing campaigns through an AI focused interface. The system enables campaign managers to plan, configure, execute, and analyze campaigns across various channels from a unified interface, through text prompts.
+"Campaign Launchpad" is a proof-of-concept designed to orchestrate and manage multi-channel marketing campaigns through an AI focused interface. The system enables campaign managers to plan, configure, execute, and analyze campaigns across various channels from a unified interface, through text prompts.
 
 ### Objectives
 
@@ -127,6 +127,7 @@ Empty State: When no dialog is active, the Agent Canvas renders as a single-colu
 #### UC1: Create Multi-Channel Campaign Through AI
 
 **Actor**: Campaign Manager  
+**Description**: Use AI prompt to generate campaign
 **Flow**:
 
 1. User enters campaign request as a prompt the user input box. Any attached context is also shared as input.
@@ -144,6 +145,7 @@ Empty State: When no dialog is active, the Agent Canvas renders as a single-colu
 #### UC2: Seach for a campaign, audience segment, or Knowledge article
 
 **Actor**: Campaign Manager  
+**Description**: Search campaign and audience using just text input
 **Flow**:
 
 1. User enters short text (less than) in the user input box.
@@ -156,6 +158,7 @@ Empty State: When no dialog is active, the Agent Canvas renders as a single-colu
 #### UC3: Access campaign, audience, or Knowledge article table from agent canvas empty state
 
 **Actor**: Campaign manager
+**Description**: Access full page campaign, audience, and knowledge table interface
 **Flow**:
 
 1. User opens the web app
