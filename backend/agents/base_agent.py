@@ -82,6 +82,16 @@ class BaseAgent(ABC):
             {"role": "system", "content": self.system_prompt}
         ]
         
+        # Add knowledge articles if available
+        if context and context.get("knowledge_articles"):
+            knowledge_text = self._format_knowledge_articles(context["knowledge_articles"])
+            if knowledge_text:
+                # Add knowledge articles as a system message or append to system prompt
+                messages.append({
+                    "role": "system",
+                    "content": f"Relevant Knowledge Articles:\n\n{knowledge_text}\n\nUse this knowledge to inform your responses."
+                })
+        
         # Add context if available
         if context and context.get("conversation_history"):
             for msg in context["conversation_history"]:
@@ -95,14 +105,38 @@ class BaseAgent(ABC):
         
         return messages
     
-    def _call_llm(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
+    def _format_knowledge_articles(self, knowledge_articles: List[Dict[str, Any]]) -> str:
+        """Format knowledge articles for inclusion in messages"""
+        if not knowledge_articles:
+            return ""
+        
+        formatted = []
+        for article in knowledge_articles:
+            title = article.get("title", "Untitled")
+            content = article.get("content", "")
+            formatted.append(f"Knowledge Article: {title}\n{content}")
+        
+        return "\n\n".join(formatted)
+    
+    def _call_llm(
+        self, 
+        messages: List[Dict[str, str]], 
+        tools: Optional[List[Dict]] = None,
+        tool_choice: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Make LLM API call"""
+        # Use provided tools/tool_choice, or fall back to defaults
+        if tools is None:
+            tools = self.tools if self.use_tools else None
+        if tool_choice is None:
+            tool_choice = "auto" if self.use_tools else "none"
+        
         return self.llm_client.chat_completion(
             messages=messages,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
-            tools=self.tools if self.use_tools else None,
-            tool_choice="auto" if self.use_tools else "none"
+            tools=tools,
+            tool_choice=tool_choice
         )
     
     def _handle_tool_calls(
@@ -146,11 +180,26 @@ class BaseAgent(ABC):
             messages.append({
                 "role": "tool",
                 "tool_call_id": tr["tool_call_id"],
-                "content": str(tr["result"])
+                "content": str(tr["result"])    
             })
         
+        # Add explicit reminder to return JSON format after tool calls
+        # This ensures the LLM returns structured JSON even after seeing tool results
+        messages.append({
+            "role": "user",
+            "content": "Based on the tool results above, please provide your analysis in JSON format as specified in the system prompt. Return only valid JSON, no conversational text."
+        })
+        
         # Continue LLM call with tool results
-        final_response = self._call_llm(messages)
+        # Disable tool calling on final response to force JSON output
+        final_response = self._call_llm(messages, tools=None, tool_choice="none")
+        
+        # Check if LLM made another tool call instead of returning content
+        tool_calls_after = extract_tool_calls(final_response)
+        if tool_calls_after and self.use_tools:
+            # Recursively handle additional tool calls
+            return self._handle_tool_calls(final_response, tool_calls_after, messages, context)
+        
         return self._parse_response(final_response, context)
     
     def _parse_response(

@@ -14,6 +14,8 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "@tailwindcss/typography": "^0.5.10"
+    "@tailwindcss/typography": "^0.5.10",
+    "chart.js": "^4.4.0",
+    "marked": "^11.0.0"
   }
 }

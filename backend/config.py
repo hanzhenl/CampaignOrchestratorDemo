@@ -2,6 +2,8 @@
 Configuration management for agent orchestration system
 """
 import os
+import json
+import time
 from typing import Dict
 from dotenv import load_dotenv
 
@@ -17,7 +19,14 @@ class AgentConfig:
     
     # Request Configuration
     max_retries: int = int(os.getenv("MAX_RETRIES", "3"))
-    request_timeout: int = int(os.getenv("REQUEST_TIMEOUT", "30"))
+    # Increased default timeout to 120s for complex LLM requests with tool calling
+    # #region agent log
+    _env_timeout_raw = os.getenv("REQUEST_TIMEOUT", "120")
+    _env_timeout_int = int(_env_timeout_raw)
+    with open('/Users/hanzhenliu/Desktop/Oneiros/CampaignOrchestratorDemo/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"location":"config.py:AgentConfig:request_timeout","message":"Reading REQUEST_TIMEOUT from environment","data":{"env_value_raw":_env_timeout_raw,"env_value_int":_env_timeout_int,"default_used":_env_timeout_raw == "120"},"timestamp":int(time.time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+'\n')
+    request_timeout: int = _env_timeout_int
+    # #endregion
     rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
     
     # Agent Temperature Settings

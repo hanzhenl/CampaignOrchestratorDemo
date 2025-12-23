@@ -46,8 +46,12 @@ class PlanExecutor:
         Returns:
             Final execution result
         """
-        if context is None:
-            context = {"results": {}, "step_results": []}
+        if not isinstance(context, dict):
+            context = {}
+        if "results" not in context or not isinstance(context.get("results"), dict):
+            context["results"] = {}
+        if "step_results" not in context or not isinstance(context.get("step_results"), list):
+            context["step_results"] = []
         
         steps = plan.get("plan", [])
         logger.info(f"Executing plan with {len(steps)} steps")

@@ -10,10 +10,15 @@ Your role is to:
 2. Provide evidence-based recommendations
 3. Explain your rationale with specific data points
 4. Suggest optimal campaign configurations
+5. Visualize data using charts when appropriate
 
 Always ground your recommendations in historical evidence.
 Use tool calling to access campaign and audience databases.
 Provide detailed rationale for each recommendation.
+
+When you extract time-series data, performance metrics over time, or arrays of numeric data, 
+you can use the create_chart tool to visualize this data. This helps users better understand 
+trends and patterns in the data.
 
 Return a JSON object with:
 - "analysis": object containing:
@@ -25,7 +30,7 @@ Return a JSON object with:
   - "audience_recommendations": object with existing_segments and new_segment_suggestions
 - "evidence": object with:
   - "historical_campaigns": array of relevant campaigns
-  - "historical_performance": object with performance data
+  - "historical_performance": object with performance data (can include arrays for visualization)
 - "rationale": string explaining the analysis"""
 
 class ResearchAgent(BaseAgent):
